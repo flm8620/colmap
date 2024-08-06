@@ -45,32 +45,6 @@ set(CMAKE_TARGETS_ROOT_FOLDER "cmake")
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER
              ${CMAKE_TARGETS_ROOT_FOLDER})
 set(COLMAP_TARGETS_ROOT_FOLDER "colmap_targets")
-set(COLMAP_SRC_ROOT_FOLDER "colmap_sources")
-
-# This macro will search for source files in a given directory, will add them
-# to a source group (folder within a project), and will then return paths to
-# each of the found files. The usage of the macro is as follows:
-# COLMAP_ADD_SOURCE_DIR(
-#     <source directory to search>
-#     <output variable with found source files>
-#     <search expressions such as *.h *.cc>)
-macro(COLMAP_ADD_SOURCE_DIR SRC_DIR SRC_VAR)
-    # Create the list of expressions to be used in the search.
-    set(GLOB_EXPRESSIONS "")
-    foreach(ARG ${ARGN})
-        list(APPEND GLOB_EXPRESSIONS ${SRC_DIR}/${ARG})
-    endforeach()
-    # Perform the search for the source files.
-    file(GLOB ${SRC_VAR} RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-         ${GLOB_EXPRESSIONS})
-    # Create the source group.
-    string(REPLACE "/" "\\" GROUP_NAME ${SRC_DIR})
-    source_group(${GROUP_NAME} FILES ${${SRC_VAR}})
-    # Clean-up.
-    unset(GLOB_EXPRESSIONS)
-    unset(ARG)
-    unset(GROUP_NAME)
-endmacro(COLMAP_ADD_SOURCE_DIR)
 
 # Replacement for the normal add_library() command. The syntax remains the same
 # in that the first argument is the target name, and the following arguments

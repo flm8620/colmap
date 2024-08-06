@@ -81,6 +81,8 @@ set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_NO_CYCLES ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # for clangd highlighting
+
 ################################################################################
 # Include CMake dependencies
 ################################################################################
@@ -213,77 +215,6 @@ link_directories(${COLMAP_LINK_DIRS})
 
 add_subdirectory(src/colmap)
 add_subdirectory(src/thirdparty)
-
-################################################################################
-# Generate source groups for Visual Studio, XCode, etc.
-################################################################################
-
-COLMAP_ADD_SOURCE_DIR(src/colmap/controllers CONTROLLERS_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/estimators ESTIMATORS_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/exe EXE_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/feature FEATURE_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/geometry GEOMETRY_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/image IMAGE_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/math MATH_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/mvs MVS_SRCS *.h *.cc *.cu)
-COLMAP_ADD_SOURCE_DIR(src/colmap/optim OPTIM_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/retrieval RETRIEVAL_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/scene SCENE_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/sensor SENSOR_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/sfm SFM_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/tools TOOLS_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/ui UI_SRCS *.h *.cc)
-COLMAP_ADD_SOURCE_DIR(src/colmap/util UTIL_SRCS *.h *.cc)
-
-if(LSD_ENABLED)
-    COLMAP_ADD_SOURCE_DIR(src/thirdparty/LSD THIRDPARTY_LSD_SRCS *.h *.c)
-endif()
-COLMAP_ADD_SOURCE_DIR(src/thirdparty/PoissonRecon THIRDPARTY_POISSON_RECON_SRCS *.h *.cpp *.inl)
-COLMAP_ADD_SOURCE_DIR(src/thirdparty/SiftGPU THIRDPARTY_SIFT_GPU_SRCS *.h *.cpp *.cu)
-COLMAP_ADD_SOURCE_DIR(src/thirdparty/VLFeat THIRDPARTY_VLFEAT_SRCS *.h *.c *.tc)
-
-# Add all of the source files to a regular library target, as using a custom
-# target does not allow us to set its C++ include directories (and thus
-# intellisense can't find any of the included files).
-set(ALL_SRCS
-    ${CONTROLLERS_SRCS}
-    ${ESTIMATORS_SRCS}
-    ${EXE_SRCS}
-    ${FEATURE_SRCS}
-    ${GEOMETRY_SRCS}
-    ${IMAGE_SRCS}
-    ${MATH_SRCS}
-    ${MVS_SRCS}
-    ${OPTIM_SRCS}
-    ${RETRIEVAL_SRCS}
-    ${SCENE_SRCS}
-    ${SENSOR_SRCS}
-    ${SFM_SRCS}
-    ${TOOLS_SRCS}
-    ${UI_SRCS}
-    ${UTIL_SRCS}
-    ${THIRDPARTY_POISSON_RECON_SRCS}
-    ${THIRDPARTY_SIFT_GPU_SRCS}
-    ${THIRDPARTY_VLFEAT_SRCS}
-)
-
-if(LSD_ENABLED)
-    list(APPEND ALL_SRCS
-        ${THIRDPARTY_LSD_SRCS}
-    )
-endif()
-
-add_library(
-    ${COLMAP_SRC_ROOT_FOLDER}
-    ${ALL_SRCS}
-)
-
-# Prevent the library from being compiled automatically.
-set_target_properties(
-    ${COLMAP_SRC_ROOT_FOLDER} PROPERTIES
-    EXCLUDE_FROM_ALL 1
-    EXCLUDE_FROM_DEFAULT_BUILD 1)
-
 
 ################################################################################
 # Install and uninstall scripts
