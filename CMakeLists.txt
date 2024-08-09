@@ -74,9 +74,9 @@ project(COLMAP LANGUAGES C CXX)
 
 set(COLMAP_VERSION "3.11.0.dev0")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_STANDARD 14)
+set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_NO_CYCLES ON)
@@ -209,6 +209,10 @@ endif()
 
 # Generate source file with version definitions.
 include(GenerateVersionDefinitions)
+
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+link_libraries(${OpenCV_LIBS})
 
 include_directories(src)
 link_directories(${COLMAP_LINK_DIRS})
