@@ -582,6 +582,10 @@ class SiftGPUFeatureExtractor : public FeatureExtractor {
     sift_gpu_args.push_back("-fo");
     sift_gpu_args.push_back(std::to_string(options.first_octave));
 
+    // octave number.
+    sift_gpu_args.push_back("-no");
+    sift_gpu_args.push_back(std::to_string(options.num_octaves));
+
     // Number of octave levels.
     sift_gpu_args.push_back("-d");
     sift_gpu_args.push_back(std::to_string(options.octave_resolution));

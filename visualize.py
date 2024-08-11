@@ -8,7 +8,7 @@ output_path = "/home/norman/host_home/moving_norman_debug_colmap/debug_viz"
 
 args = [
     "--database",
-    "/home/norman/host_home/moving_norman_debug_colmap/distorted/database2.db",
+    "/home/norman/host_home/moving_norman_debug_colmap/distorted/database.db",
     "--image_path",
     "/home/norman/host_home/moving_norman_debug_colmap/input",
     "--output_path",

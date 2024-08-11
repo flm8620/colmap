@@ -16,13 +16,26 @@ def main():
         executable_path = "/home/norman/colmap/build/src/colmap/exe/colmap"
         output_path = "/home/norman/host_home/moving_norman_debug_colmap/debug_viz"
         feature_args = [
-            "--image_path", image_path, "--ImageReader.single_camera", "true",
-            "--ImageReader.camera_model", camera_model,
-            "--ImageReader.camera_params", camera_params,
-            "--SiftExtraction.estimate_affine_shape", "false",
-            "--SiftExtraction.max_image_size", "3000",
-            "--SiftExtraction.max_num_features", "30000",
-            "--SiftExtraction.peak_threshold", "0.002"
+            "--image_path",
+            image_path,
+            "--ImageReader.single_camera",
+            "true",
+            "--ImageReader.camera_model",
+            camera_model,
+            "--ImageReader.camera_params",
+            camera_params,
+            "--SiftExtraction.estimate_affine_shape",
+            "false",
+            "--SiftExtraction.max_image_size",
+            "3000",
+            "--SiftExtraction.max_num_features",
+            "30000",
+            "--SiftExtraction.peak_threshold",
+            "0.002",
+            "--SiftExtraction.num_octaves",
+            "2",
+            "--SiftExtraction.upright",
+            "true",
         ]
         args = ["feature_extractor"] + common_args + feature_args
 
@@ -32,9 +45,12 @@ def main():
         executable_path = "/home/norman/colmap/build/src/colmap/exe/colmap"
         output_path = "/home/norman/host_home/moving_norman_debug_colmap/debug_viz"
         match_args = [
-            "--SequentialMatching.overlap", "3",
-            "--SequentialMatching.quadratic_overlap", "false",
-            "--SiftMatching.max_num_matches", "50000",
+            "--SequentialMatching.overlap",
+            "3",
+            "--SequentialMatching.quadratic_overlap",
+            "false",
+            "--SiftMatching.max_num_matches",
+            "50000",
         ]
         args = [
             "sequential_matcher",

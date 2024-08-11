@@ -48,7 +48,6 @@ void DumpMatches(colmap::Database& database,
                  const std::vector<Image>& images,
                  const std::filesystem::path& image_path,
                  const std::filesystem::path& output_path) {
-  const bool dump_matches = true;
   for (int i = 0; i < images.size(); i++) {
     for (int j = i + 1; j < images.size(); j++) {
       const auto a = images[i].ImageId();
@@ -61,34 +60,32 @@ void DumpMatches(colmap::Database& database,
                 << images[j].ImageId() << ": " << matches.size();
       const FeatureKeypoints kpts_a = database.ReadKeypoints(a);
       const FeatureKeypoints kpts_b = database.ReadKeypoints(b);
-      if (dump_matches) {
-        LOG(INFO) << "dumping matches";
-        cv::Mat im_a = cv::imread((image_path / images[i].Name()).string(),
-                                  cv::IMREAD_UNCHANGED);
-        cv::Mat im_b = cv::imread((image_path / images[j].Name()).string(),
-                                  cv::IMREAD_UNCHANGED);
-        DrawKeypoints(im_a, kpts_a);
-        DrawKeypoints(im_b, kpts_b);
-        for (const auto& match : matches) {
-          const auto& kpt_a = kpts_a[match.point2D_idx1];
-          const auto& kpt_b = kpts_b[match.point2D_idx2];
-          cv::line(im_a,
-                   cv::Point2f(kpt_a.x, kpt_a.y),
-                   cv::Point2f(kpt_b.x, kpt_b.y),
-                   cv::Scalar(255, 0, 0),
-                   1,
-                   cv::LINE_8);
-          cv::line(im_b,
-                   cv::Point2f(kpt_a.x, kpt_a.y),
-                   cv::Point2f(kpt_b.x, kpt_b.y),
-                   cv::Scalar(255, 0, 0),
-                   1,
-                   cv::LINE_8);
-        }
-        const std::string pair_name = images[i].Name() + "_" + images[j].Name();
-        cv::imwrite((output_path / (pair_name + "_a.png")).string(), im_a);
-        cv::imwrite((output_path / (pair_name + "_b.png")).string(), im_b);
+      LOG(INFO) << "dumping matches";
+      cv::Mat im_a = cv::imread((image_path / images[i].Name()).string(),
+                                cv::IMREAD_UNCHANGED);
+      cv::Mat im_b = cv::imread((image_path / images[j].Name()).string(),
+                                cv::IMREAD_UNCHANGED);
+      DrawKeypoints(im_a, kpts_a);
+      DrawKeypoints(im_b, kpts_b);
+      for (const auto& match : matches) {
+        const auto& kpt_a = kpts_a[match.point2D_idx1];
+        const auto& kpt_b = kpts_b[match.point2D_idx2];
+        cv::line(im_a,
+                 cv::Point2f(kpt_a.x, kpt_a.y),
+                 cv::Point2f(kpt_b.x, kpt_b.y),
+                 cv::Scalar(255, 0, 0),
+                 1,
+                 cv::LINE_8);
+        cv::line(im_b,
+                 cv::Point2f(kpt_a.x, kpt_a.y),
+                 cv::Point2f(kpt_b.x, kpt_b.y),
+                 cv::Scalar(255, 0, 0),
+                 1,
+                 cv::LINE_8);
       }
+      const std::string pair_name = images[i].Name() + "_" + images[j].Name();
+      cv::imwrite((output_path / (pair_name + "_a.png")).string(), im_a);
+      cv::imwrite((output_path / (pair_name + "_b.png")).string(), im_b);
     }
   }
 }
@@ -168,7 +165,7 @@ int main(int argc, char** argv) {
       cv::imwrite((output_path / image.Name()).string(), im);
     }
   }
-
+  // DumpMatches(database, images, image_path, output_path);
   DumpMatchMatrix(database, images, image_path, output_path);
 
   database.Close();
