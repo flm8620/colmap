@@ -12,8 +12,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow {
  public:
   MainWindow(QWidget* parent = nullptr);
  public slots:
-  void on_actionOpen_VisualSFM_nvm_triggered();
-  void on_actionOpen_COLMAP_project_ini_triggered();
+  void on_actionOpen_COLMAP_project_triggered();
   void WhenImageSelected(int row, int col);
   void WhenMatchedImageSelected(int row, int col);
   void on_size_slider_valueChanged(int size);

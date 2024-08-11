@@ -1,13 +1,15 @@
 #include "mainwindow.h"
 
+#include "colmap/scene/database.h"
+
 #include <QFileDialog>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
 
-#include "FeaturePoints.h"
-#include "MatchFile.h"
+#include <Eigen/Dense>
 
 void MainWindow::ApplyScene() {
   const auto& images = scene.Images();
@@ -44,128 +46,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
           &MainWindow::WhenMatchedImageSelected);
 }
 
-void MainWindow::on_actionOpen_VisualSFM_nvm_triggered() {
-  static QString last_file_name = "";
-  QString file_name =
-      QFileDialog::getOpenFileName(this,
-                                   tr("Open VisualSFM nvm exportation"),
-                                   last_file_name,
-                                   tr("NVM (*.nvm)"));
-  if (file_name.isNull()) return;
-  last_file_name = file_name;
-
-  QDir dir = QFileInfo(file_name).dir();
-
-  std::ifstream infile(file_name.toStdString());
-  if (!infile) return;
-  std::string line;
-
-  std::vector<ImageInfo> image_infos;
-
-  std::vector<std::vector<AbstractFeature>> image_to_features;
-  std::vector<std::map<int, std::vector<std::pair<int, int>>>>
-      image1_image2_matches;
-
-  std::istringstream iss;
-  int n_img;
-  bool ok = false;
-  while (std::getline(infile, line)) {
-    if (line.empty()) continue;
-    if (line[0] == '#') continue;
-    iss.clear();
-    iss.str(line);
-    if (!(iss >> n_img)) continue;
-    ok = true;
-    break;
-  }
-
-  if (!ok) return;
-
-  for (int i = 0; i < n_img; i++) {
-    iss.clear();
-    std::getline(infile, line);
-    iss.str(line);
-    ImageInfo info;
-    std::string img_name;
-    int zero;
-    if (!(iss >> img_name >> info.focal >> info.qw >> info.qx >> info.qy >>
-          info.qz >> info.Cx >> info.Cy >> info.Cz >> info.r >> zero))
-      return;
-    if (zero != 0) return;
-    const QFileInfo image_file = dir.filePath(img_name.c_str());
-    info.image_file = image_file.filePath().toStdString();
-
-    QPixmap img(info.image_file.c_str());
-    info.width = img.width();
-    info.height = img.height();
-
-    const QString image_base = image_file.completeBaseName();
-    info.sift_file = dir.filePath(image_base + ".sift").toStdString();
-    info.mat_file = dir.filePath(image_base + ".mat").toStdString();
-    if (!QFileInfo(info.sift_file.c_str()).exists() ||
-        !QFileInfo(info.mat_file.c_str()).exists()) {
-      std::cout << "Error ! mat or sift file of image missing!" << std::endl;
-      return;
-    }
-    image_infos.emplace_back(info);
-  }
-
-  for (int im_id = 0; im_id < image_infos.size(); im_id++) {
-    FeatureData data;
-    QString sift_file = image_infos[im_id].sift_file.c_str();
-    data.ReadSIFTB(sift_file.toStdString().c_str());
-
-    FeatureData::LocationData& loc_data = *data._locData;
-    auto ptr = Points<float>::TV5(loc_data);
-    image_to_features.emplace_back();
-    std::vector<AbstractFeature>& features = image_to_features.back();
-    for (int i = 0; i < data._npoint; i++) {
-      AbstractFeature f;
-      float* p = *ptr;
-      f.pos = QPointF(p[0], p[1]);
-      f.scale = p[3];
-      f.orient = p[4];
-      features.push_back(f);
-      ptr++;
-    }
-  }
-
-  for (int im1 = 0; im1 < image_infos.size(); im1++) {
-    image1_image2_matches.emplace_back();
-    auto& im1_imn_matches = image1_image2_matches.back();
-    for (int im2 = 0; im2 < image_infos.size(); im2++) {
-      if (im1 == im2) continue;
-      int n_putative;
-      int n_inliner;
-      QFileInfo im_1(image_infos[im1].image_file.c_str());
-      std::string im1_name =
-          im_1.dir().filePath(im_1.completeBaseName()).toStdString();
-      MatchFile mat(im1_name.c_str());
-      if (!mat.IsValid()) continue;
-      QFileInfo im_2(image_infos[im2].image_file.c_str());
-      std::string im2_name =
-          im_2.dir().filePath(im_2.completeBaseName()).toStdString();
-      if (!mat.GetMatchCount(im2_name.c_str(), n_putative, n_inliner)) continue;
-
-      const int n_feature_im2 = image_to_features[im2].size();
-      int n_putative_2;
-      Points<int> matches;
-      if (!mat.GetPMatch(
-              im2_name.c_str(), n_feature_im2, n_putative_2, matches))
-        continue;
-      if (n_putative_2 != n_putative) continue;
-
-      auto& im1_im2_matches = im1_imn_matches[im2];
-      for (int k = 0; k < n_putative; k++)
-        im1_im2_matches.emplace_back(matches[0][k], matches[1][k]);
-    }
-  }
-
-  scene.setScene(image_infos, image_to_features, image1_image2_matches);
-  ApplyScene();
-}
-
-void MainWindow::on_actionOpen_COLMAP_project_ini_triggered() {
+void MainWindow::on_actionOpen_COLMAP_project_triggered() {
   static QString last_database_file_name = "";
   const QString file_name = QFileDialog::getOpenFileName(
       this, tr("Open COLMAP database file"), last_database_file_name);
@@ -181,11 +62,11 @@ void MainWindow::on_actionOpen_COLMAP_project_ini_triggered() {
   if (image_dir.isNull()) return;
   last_image_dir_name = image_dir;
 
-  QDir dir = QFileInfo(file_name).dir();
+  colmap::Database database(file_name.toStdString());
+  std::filesystem::path image_path(image_dir.toStdString());
 
-  std::ifstream infile(file_name.toStdString());
-  if (!infile) return;
-  std::string line;
+  std::vector<colmap::Camera> cameras = database.ReadAllCameras();
+  std::vector<colmap::Image> images = database.ReadAllImages();
 
   std::vector<ImageInfo> image_infos;
 
@@ -193,67 +74,41 @@ void MainWindow::on_actionOpen_COLMAP_project_ini_triggered() {
   std::vector<std::map<int, std::vector<std::pair<int, int>>>>
       image1_image2_matches;
 
-  std::istringstream iss;
-  int n_img;
-  bool ok = false;
-  while (std::getline(infile, line)) {
-    if (line.empty()) continue;
-    if (line[0] == '#') continue;
-    iss.clear();
-    iss.str(line);
-    if (!(iss >> n_img)) continue;
-    ok = true;
-    break;
-  }
-
-  if (!ok) return;
-
-  for (int i = 0; i < n_img; i++) {
-    iss.clear();
-    std::getline(infile, line);
-    iss.str(line);
+  for (int i = 0; i < images.size(); i++) {
+    const auto& im = images.at(i);
     ImageInfo info;
     std::string img_name;
-    int zero;
-    if (!(iss >> img_name >> info.focal >> info.qw >> info.qx >> info.qy >>
-          info.qz >> info.Cx >> info.Cy >> info.Cz >> info.r >> zero))
-      return;
-    if (zero != 0) return;
-    const QFileInfo image_file = dir.filePath(img_name.c_str());
-    info.image_file = image_file.filePath().toStdString();
+    info.image_file = (image_path / im.Name()).string();
 
     QPixmap img(info.image_file.c_str());
     info.width = img.width();
     info.height = img.height();
 
-    const QString image_base = image_file.completeBaseName();
-    info.sift_file = dir.filePath(image_base + ".sift").toStdString();
-    info.mat_file = dir.filePath(image_base + ".mat").toStdString();
-    if (!QFileInfo(info.sift_file.c_str()).exists() ||
-        !QFileInfo(info.mat_file.c_str()).exists()) {
-      std::cout << "Error ! mat or sift file of image missing!" << std::endl;
-      return;
-    }
     image_infos.emplace_back(info);
   }
 
-  for (int im_id = 0; im_id < image_infos.size(); im_id++) {
-    FeatureData data;
-    QString sift_file = image_infos[im_id].sift_file.c_str();
-    data.ReadSIFTB(sift_file.toStdString().c_str());
+  for (int idx = 0; idx < image_infos.size(); idx++) {
+    const auto& im = images.at(idx);
+    const colmap::FeatureKeypoints kpts = database.ReadKeypoints(im.ImageId());
+    std::vector<AbstractFeature>& features = image_to_features.emplace_back();
+    for (int k = 0; k < kpts.size(); k++) {
+      const auto& kpt = kpts[k];
 
-    FeatureData::LocationData& loc_data = *data._locData;
-    auto ptr = Points<float>::TV5(loc_data);
-    image_to_features.emplace_back();
-    std::vector<AbstractFeature>& features = image_to_features.back();
-    for (int i = 0; i < data._npoint; i++) {
+      Eigen::Matrix2f A;
+      A << kpt.a11, kpt.a12, kpt.a21, kpt.a22;
+
+      const Eigen::Vector2f v(kpt.x, kpt.y);
+      const Eigen::Vector2f dir(1.0, 0.0);
+      const Eigen::Vector2f rotated = A * dir;
+      const Eigen::Vector2f unit_dir = rotated.normalized();
+      const double scale = std::sqrt(A.determinant());
+      const double angle = std::atan2(unit_dir.y(), unit_dir.x());
+
       AbstractFeature f;
-      float* p = *ptr;
-      f.pos = QPointF(p[0], p[1]);
-      f.scale = p[3];
-      f.orient = p[4];
+      f.pos = QPointF(kpt.x, kpt.y);
+      f.scale = scale;
+      f.orient = angle;
       features.push_back(f);
-      ptr++;
     }
   }
 
@@ -262,29 +117,23 @@ void MainWindow::on_actionOpen_COLMAP_project_ini_triggered() {
     auto& im1_imn_matches = image1_image2_matches.back();
     for (int im2 = 0; im2 < image_infos.size(); im2++) {
       if (im1 == im2) continue;
-      int n_putative;
-      int n_inliner;
-      QFileInfo im_1(image_infos[im1].image_file.c_str());
-      std::string im1_name =
-          im_1.dir().filePath(im_1.completeBaseName()).toStdString();
-      MatchFile mat(im1_name.c_str());
-      if (!mat.IsValid()) continue;
-      QFileInfo im_2(image_infos[im2].image_file.c_str());
-      std::string im2_name =
-          im_2.dir().filePath(im_2.completeBaseName()).toStdString();
-      if (!mat.GetMatchCount(im2_name.c_str(), n_putative, n_inliner)) continue;
 
-      const int n_feature_im2 = image_to_features[im2].size();
-      int n_putative_2;
-      Points<int> matches;
-      if (!mat.GetPMatch(
-              im2_name.c_str(), n_feature_im2, n_putative_2, matches))
+      const auto a = images[im1].ImageId();
+      const auto b = images[im2].ImageId();
+
+      if (!database.ExistsMatches(a, b)) {
         continue;
-      if (n_putative_2 != n_putative) continue;
+      }
+      const std::vector<colmap::FeatureMatch> matches =
+          database.ReadMatches(a, b);
+
+      const colmap::FeatureKeypoints kpts_a = database.ReadKeypoints(a);
+      const colmap::FeatureKeypoints kpts_b = database.ReadKeypoints(b);
 
       auto& im1_im2_matches = im1_imn_matches[im2];
-      for (int k = 0; k < n_putative; k++)
-        im1_im2_matches.emplace_back(matches[0][k], matches[1][k]);
+      for (const auto& match : matches) {
+        im1_im2_matches.emplace_back(match.point2D_idx1, match.point2D_idx2);
+      }
     }
   }
 
@@ -299,7 +148,6 @@ void MainWindow::WhenImageSelected(int r, int c) {
   if (!ok) return;
 
   const auto& images = scene.Images();
-  const auto& image_to_features = scene.ImageToFeatures();
   const auto& image_matches = scene.Image1Image2Matches()[img_id];
   this->image_match_list->clear();
   this->image_match_list->setRowCount(image_matches.size());

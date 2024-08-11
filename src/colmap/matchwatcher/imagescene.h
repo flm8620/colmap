@@ -10,7 +10,7 @@
 struct AbstractFeature {
   QPointF pos;
   float scale;
-  float orient;
+  float orient; // counter-clockwise, 0 for up
 };
 
 inline Eigen::Matrix3d MatrixCross(const Eigen::Vector3d& v) {
@@ -25,7 +25,7 @@ inline Eigen::Matrix3d MatrixCross(const Eigen::Vector3d& v) {
 }
 
 struct ImageInfo {
-  std::string image_file, sift_file, mat_file;
+  std::string image_file;
   int width, height;
   double focal, qw, qx, qy, qz, Cx, Cy, Cz, r;
   Eigen::Matrix3d getK() const {

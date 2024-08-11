@@ -7,8 +7,6 @@ set(CMAKE_AUTOUIC ON)
 COLMAP_ADD_EXECUTABLE(
     NAME matchwatcher
     SRCS
-        FeaturePoints.cc
-        FeaturePoints.h
         imageholder.cc
         imageholder.h
         imagescene.cc
@@ -20,8 +18,6 @@ COLMAP_ADD_EXECUTABLE(
         mainwindow.h
         marker.cc
         marker.h
-        MatchFile.cc
-        MatchFile.h
         points.h
         main.cc
     LINK_LIBS

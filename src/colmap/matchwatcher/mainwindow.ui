@@ -182,15 +182,14 @@
      <x>0</x>
      <y>0</y>
      <width>1238</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionOpen_VisualSFM_nvm"/>
-    <addaction name="actionOpen_COLMAP_project_ini"/>
+    <addaction name="actionOpen_COLMAP_project"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -200,14 +199,9 @@
     <string>Open</string>
    </property>
   </action>
-  <action name="actionOpen_VisualSFM_nvm">
+  <action name="actionOpen_COLMAP_project">
    <property name="text">
-    <string>Open VisualSFM nvm export</string>
-   </property>
-  </action>
-  <action name="actionOpen_COLMAP_project_ini">
-   <property name="text">
-    <string>Open COLMAP project.ini</string>
+    <string>Open COLMAP project</string>
    </property>
   </action>
  </widget>
