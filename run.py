@@ -32,10 +32,14 @@ def main():
             "30000",
             "--SiftExtraction.peak_threshold",
             "0.002",
+            "--SiftExtraction.first_octave",
+            "-1",
             "--SiftExtraction.num_octaves",
-            "2",
+            "4",
             "--SiftExtraction.upright",
             "true",
+            "--SiftExtraction.use_gpu",
+            "false",
         ]
         args = ["feature_extractor"] + common_args + feature_args
 
