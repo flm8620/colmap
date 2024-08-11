@@ -90,3 +90,18 @@ COLMAP_ADD_EXECUTABLE(
         Boost::boost
 )
 set_target_properties(colmap_main PROPERTIES OUTPUT_NAME colmap)
+
+COLMAP_ADD_EXECUTABLE(
+    NAME leman_read_test
+    SRCS
+        leman_read_test.cc
+    LINK_LIBS
+        colmap_controllers
+        colmap_retrieval
+        colmap_scene
+        colmap_sfm
+        colmap_util
+        ${OPTIONAL_LIBS}
+        Boost::boost
+)
+set_target_properties(leman_read_test PROPERTIES OUTPUT_NAME leman_read_test)
