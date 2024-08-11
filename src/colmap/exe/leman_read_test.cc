@@ -31,7 +31,7 @@ void DrawKeypoints(cv::Mat& im, const FeatureKeypoints& kpts) {
     const double scale = std::sqrt(A.determinant());
     cv::circle(im,
                cv::Point2f(kpt.x, kpt.y),
-               std::max(1, (int)std::round(scale)),
+               std::max(2, (int)std::round(scale)),
                cv::Scalar(0, 255, 0),
                1,
                cv::LINE_8);
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
 
   std::vector<Camera> cameras = database.ReadAllCameras();
   std::vector<Image> images = database.ReadAllImages();
-  const bool dump_kpts = false;
+  const bool dump_kpts = true;
   for (const auto& image : images) {
     LOG(INFO) << "Image ID: " << image.ImageId();
     LOG(INFO) << "Name: " << image.Name();
