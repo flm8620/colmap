@@ -32,6 +32,14 @@ void ImageView::zoomOut() {
   this->setTransform(t);
 }
 
+void ImageView::onMarkerClicked(int feature_id) {
+  const auto& [f, marker] = features.at(feature_id);
+  std::cout << "Selected feature id " << feature_id << " at (" << f.pos.x()
+            << ", " << f.pos.y() << ")" << std::endl;
+  std::cout << "Scale: " << f.scale << std::endl;
+  std::cout << "Orientation: " << f.orient << std::endl;
+}
+
 void ImageView::LoadImage(int idx) {
   Clear();
   current_img_idx_ = idx;
@@ -50,6 +58,7 @@ void ImageView::LoadImage(int idx) {
     this->scene.addItem(marker);
     marker->setScale(f.scale / 10.);
     this->features.emplace_back(f, marker);
+    connect(marker, &Marker::clicked, this, &ImageView::onMarkerClicked);
   }
 }
 
@@ -73,7 +82,10 @@ void ImageView::UpdateFeaturesVisibility() {
       }
     else {
       for (auto& feature : features) feature.second->setVisible(false);
-      for (int i : matched) features[i].second->setVisible(true);
+      for (int i : matched) {
+        const auto& f = features.at(i);
+        f.second->setVisible(f.first.scale < max_feature_size);
+      }
     }
   }
 }

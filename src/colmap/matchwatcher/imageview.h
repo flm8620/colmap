@@ -35,9 +35,10 @@ class ImageView : public QGraphicsView {
  public slots:
   void zoomIn();
   void zoomOut();
+  void onMarkerClicked(int feature_id);
 
  public:
-  ImageView(QWidget* parent = nullptr, int id = -1)
+  explicit ImageView(QWidget* parent = nullptr, int id = -1)
       : id(id), current_img_idx_(-1) {
     this->setScene(&scene);
     this->setDragMode(ScrollHandDrag);
@@ -79,7 +80,7 @@ class ImageView : public QGraphicsView {
 
   void UpdateFeaturesVisibility();
 
-  void SetMatchedFeatures(std::set<int> matched) { this->matched = matched; }
+  void SetMatchedFeatures(const std::set<int>& matched) { this->matched = matched; }
 
   void SetOnlyShowMatched(bool checked) { only_show_matched = checked; }
 

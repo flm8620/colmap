@@ -65,8 +65,12 @@ void MainWindow::on_actionOpen_COLMAP_project_triggered() {
   colmap::Database database(file_name.toStdString());
   std::filesystem::path image_path(image_dir.toStdString());
 
-  std::vector<colmap::Camera> cameras = database.ReadAllCameras();
-  std::vector<colmap::Image> images = database.ReadAllImages();
+  const std::vector<colmap::Camera> cameras = database.ReadAllCameras();
+  std::map<colmap::camera_t, const colmap::Camera*> camera_map;
+  for (const auto& cam : cameras) {
+    camera_map[cam.camera_id] = &cam;
+  }
+  const std::vector<colmap::Image> images = database.ReadAllImages();
 
   std::vector<ImageInfo> image_infos;
 
@@ -80,9 +84,10 @@ void MainWindow::on_actionOpen_COLMAP_project_triggered() {
     std::string img_name;
     info.image_file = (image_path / im.Name()).string();
 
-    QPixmap img(info.image_file.c_str());
-    info.width = img.width();
-    info.height = img.height();
+    const auto& cam = *(camera_map.at(im.CameraId()));
+
+    info.width = cam.width;
+    info.height = cam.height;
 
     image_infos.emplace_back(info);
   }

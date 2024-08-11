@@ -2,7 +2,7 @@
 
 #include <QtWidgets>
 
-Marker::Marker(int id) {
+Marker::Marker(int id) : id(id) {
   // setFlags(ItemIsSelectable);
   // setAcceptHoverEvents(true);
   setZValue(10);
